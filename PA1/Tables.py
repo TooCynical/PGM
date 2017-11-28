@@ -8,14 +8,16 @@
 import pyAgrum as grum
 
 # Initialize net on four binary variables
-net = grum.BayesNet("Sprinkler")
-for var in "TJRS":
+net = grum.BayesNet("FactorGraph")
+for var in "ABCDEFGH":
 	net.add(var, 2)
 
 # Add dependency arcs
-net.addArc('R', 'J')
-net.addArc('S', 'T')
-net.addArc('R', 'T')
+net.addArc('A', 'C')
+net.addArc('B', 'D')
+net.addArc('C', 'D')
+net.addArc('C', 'H')
+net.addArc('C', 'D')
 
 # Set CPTs.
 net.cpt('R').fillWith([0.8, 0.2])

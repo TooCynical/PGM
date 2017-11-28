@@ -3,6 +3,7 @@ M = 1; N = 2; P = 3;
 A = [0,1,0;0,0,1;0,0,0];
 X = [M,N,M]; Y = [P,P,N]; Z = [N,M,P];
 Ctest = [1,0,0];
+CondIndependence(A,X,Y,Z)
 assert(all(Ctest == CondIndependence(A,X,Y,Z)));
 
 %% Test for Graph2 DAG: Fig 3.8b Barber
