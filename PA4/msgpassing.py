@@ -10,6 +10,7 @@ from pgmpy.inference import VariableElimination
 def uniform_factor(var):
     return DiscreteFactor([var], [2], np.array([[1.0, 1.0]]))
 
+
 # Compute marginal distribution for given variable.
 def brute_force(marginal, factors, variables):
     # First multiply all factors
@@ -24,6 +25,10 @@ def brute_force(marginal, factors, variables):
 
     return res.values / sum(res.values)
 
+
+# Create an edge from down to up (direction = 'UP') and
+# an edge from up to down (direction = 'DOWN'). Then add both 
+# of these edges to both up and down (here up and down are Variable Nodes).
 def create_double_edge(up, down, factor):
     e1 = Edge(up, down, factor, 'UP')
     e2 = Edge(down, up, factor, 'DOWN')
@@ -34,6 +39,8 @@ def create_double_edge(up, down, factor):
     down.add_edge(e1)
     down.add_edge(e2)
     
+
+# Class that contains a variable node as in the markov graph.
 class VarNode:
     def __init__(self, var):
         self.var = var
@@ -42,6 +49,8 @@ class VarNode:
         self.in_edges = []
 
 
+    # Add the given edges to either the incoming or the outgoing
+    # edge set, depending on whether this node is its head or its tail.
     def add_edge(self, e):
         if e.head.var == self.var:
             self.in_edges.append(e)
@@ -51,18 +60,19 @@ class VarNode:
             raise ValueError("Invalid edge added!")
             
             
-    # Sends all messages in the given direction (up or down).        
+    # Sends all messages in the given direction ('UP' or 'DOWN').        
     def send_messages(self, direction):
         for e in self.out_edges:
             if e.di == direction:
-                e.message = self.message(e)
+                e.set_message(self.compute_message(e))
             
 
-    # Compute message along given edge.        
-    def message(self, e):
+    # Compute message for given edge, i.e for an outgoing edge (v, w) compute
+    # mu_{v -> w}, where v is the variable corresponding to this node.         
+    def compute_message(self, e):
         message = uniform_factor(e.head.var)
+        
         marginals = [self.var]
-
         # Compute product of all messages/factors not send by recipient.
         for f in self.in_edges:
             if f.tail.var != e.head.var:
@@ -76,7 +86,9 @@ class VarNode:
 
         return message
 
-    # TODO: Add normalization.
+
+    # Return the marginal distribution of this node's variable,
+    # computed as the normalized product of all incoming messages.
     def marginal(self):
         ret = uniform_factor(self.var)
         for e in self.in_edges:
@@ -94,8 +106,14 @@ class Edge:
         self.di = di
         
         self.message = uniform_factor(head.var)
+
+
+    def set_message(self, message):
+        self.message = message
         
 
+    def __repr__(self):
+        return self.tail.var + " ---> " + self.head.var + " " + self.di
 
 
 
@@ -151,3 +169,5 @@ if __name__ == "__main__":
         print "X" + str(i) + ":\t", X[i].marginal()
         # print "X" + str(i) + ":\t", brute_force("X" + str(i), factors, ["X" + str(x) for x in range(1, 15)])
     
+    # for i in range(1, 15):
+        # print "X" + str(i), X[i].in_edges, X[i].out_edges
